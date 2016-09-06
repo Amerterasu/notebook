@@ -170,6 +170,10 @@ class IPythonHandler(AuthenticatedHandler):
     @property
     def default_url(self):
         return self.settings.get('default_url', '')
+   
+    @property
+    def home_url(self):
+        return self.settings.get('home_url')
 
     @property
     def ws_url(self):

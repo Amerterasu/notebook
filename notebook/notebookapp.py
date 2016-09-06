@@ -147,7 +147,7 @@ class NotebookWebApplication(web.Application):
     def __init__(self, jupyter_app, kernel_manager, contents_manager,
                  session_manager, kernel_spec_manager,
                  config_manager, log,
-                 base_url, default_url, settings_overrides, jinja_env_options):
+                 base_url, default_url, home_url,  settings_overrides, jinja_env_options):
 
         # If the user is running the notebook in a git directory, make the assumption
         # that this is a dev install and suggest to the developer `npm run build:watch`.
@@ -159,7 +159,7 @@ class NotebookWebApplication(web.Application):
         settings = self.init_settings(
             jupyter_app, kernel_manager, contents_manager,
             session_manager, kernel_spec_manager, config_manager, log, base_url,
-            default_url, settings_overrides, jinja_env_options)
+            default_url, home_url, settings_overrides, jinja_env_options)
         handlers = self.init_handlers(settings)
 
         super(NotebookWebApplication, self).__init__(handlers, **settings)
@@ -167,7 +167,7 @@ class NotebookWebApplication(web.Application):
     def init_settings(self, jupyter_app, kernel_manager, contents_manager,
                       session_manager, kernel_spec_manager,
                       config_manager,
-                      log, base_url, default_url, settings_overrides,
+                      log, base_url, default_url, home_url, settings_overrides,
                       jinja_env_options=None):
 
         _template_path = settings_overrides.get(
@@ -202,6 +202,7 @@ class NotebookWebApplication(web.Application):
             log_function=log_request,
             base_url=base_url,
             default_url=default_url,
+            home_url=home_url,
             template_path=template_path,
             static_path=jupyter_app.static_file_path,
             static_custom_path=jupyter_app.static_custom_path,
@@ -484,7 +485,11 @@ class NotebookApp(JupyterApp):
     default_url = Unicode('/tree', config=True,
         help="The default URL to redirect to from `/`"
     )
-    
+
+    home_url = Unicode('/tree', config=True,
+	help="Default home button url redirects from `/`"
+    )
+ 
     ip = Unicode('localhost', config=True,
         help="The IP address the notebook server will listen on."
     )
@@ -997,7 +1002,8 @@ class NotebookApp(JupyterApp):
         # ensure default_url starts with base_url
         if not self.default_url.startswith(self.base_url):
             self.default_url = url_path_join(self.base_url, self.default_url)
-
+        if not self.home_url.startswith(self.base_url):
+            self.home_url = url_path_join(self.base_url, self.home_url)
         if self.password_required and (not self.password):
             self.log.critical("Notebook servers are configured to only be run with a password.")
             self.log.critical("Hint: run the following command to set a password")
@@ -1008,7 +1014,7 @@ class NotebookApp(JupyterApp):
             self, self.kernel_manager, self.contents_manager,
             self.session_manager, self.kernel_spec_manager,
             self.config_manager,
-            self.log, self.base_url, self.default_url, self.tornado_settings,
+            self.log, self.base_url, self.default_url, self.home_url, self.tornado_settings,
             self.jinja_environment_options
         )
         ssl_options = self.ssl_options
